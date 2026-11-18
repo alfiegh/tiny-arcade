@@ -20,6 +20,7 @@ const VIEWS = {
   'sand-digger':  { az: 40, el: 20, pad: 0.88 },
   'dragon-sky':   { az: 12, el: 12, pad: 0.8 },
   'block-hop':    { az: 0, el: 8, pad: 0.9, space: 'camera' },
+  'treasure-seas': { az: 0, el: 8, pad: 0.95, space: 'camera', wait: 7 },
 };
 
 const root = path.join(__dirname, '..', 'app');

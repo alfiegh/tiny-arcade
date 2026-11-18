@@ -10,6 +10,7 @@
 // jumps out and follows you, and the world changes: meadow -> snow -> cheese land -> crystal cave -> ...
 Games.register({
   id: 'block-hop', name: 'Block Hop', emoji: '🍄', color: '#ffb703',
+  assets: ['cube/'],   // lazily loaded pack (parsed behind the loading screen)
   create(api) {
     const { input, sfx } = api;
     const game = this;   // remembers the last picked kid

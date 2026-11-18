@@ -54,6 +54,10 @@
       showHint();
     };
     pending.loading = Games.list[i];
+    // the game's lazily bundled model packs are parsed behind the loading screen
+    const packs = Games.list[i].assets;
+    pending.packsReady = !packs || typeof Assets === 'undefined';
+    if (!pending.packsReady) { const pd = pending; Assets.load(packs).then(() => { pd.packsReady = true; }); }
   }
   function toMenu() {
     if (mode === 'menu') return;
@@ -185,7 +189,7 @@
         if (game && !loaderEl.classList.contains('on')) showLoader(game);
         if (game) loadFrames++;
         // wait for the 3D models (first launch) and let the loader paint before the heavy create()
-        if (assetsReady && (!game || loadFrames > 2)) { pending(); pending = null; if (game) loaderHideIn = 3; }
+        if (assetsReady && (!game || (loadFrames > 2 && pending.packsReady))) { pending(); pending = null; if (game) loaderHideIn = 3; }
       }
     }
     else fade = Math.max(0, fade - dt * 3);

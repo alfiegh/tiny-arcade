@@ -19,7 +19,7 @@ app/core/input.js        all pads + keyboard merged: Input.x/.y, .pressed[], .ac
 app/core/audio.js        Sfx: every sound synthesised (note, pop, drum, roar, horn, moo, engine()…)
 app/core/fx.js           2D particles/confetti/floating emoji on the overlay canvas
 app/core/three-kit.js    Kit3D: stage, sky, sun, makeDinoModel, infiniteGround, scatter, decals, drawGuide, prop
-app/core/assets.js       parses packed models: Assets.ready, Assets.get('dinos/trex')
+app/core/assets.js       parses packed models: Assets.ready, Assets.get('dinos/trex'), Assets.load('cube/') for lazy bundles
 app/core/shell.js        menu carousel + game loop + loading screen (#loader) + parent exit (hold SELECT+START / Esc)
 app/games/*.js           one file per game, each calls Games.register({ id, name, emoji, color, create(api) })
 app/assets/dinos/        Quaternius CC0 dinos: .glb (source) + .glb.js (packed; what the app loads)
@@ -27,7 +27,9 @@ app/assets/bulldozer/    "Wheel loader" model for Sand Digger (textures embedded
 app/assets/dragon/       rigged dragon for Dragon Sky (from "Dragon Rigged and Game Ready" Unity package FBX)
 app/assets/nature/       Quaternius Simple Nature (Tree1-4, Bush1-3, Rock1-3, Grass1-3) as one .glb, one named node per model
 app/assets/cube/         Quaternius Cube World for Block Hop: 48 .glb (unused clips stripped) packed into ONE cube.bundle.js
-                         (a folder with a `.bundle` file is bundled by pack-assets). Assets.get('cube/Goblin') etc.
+app/assets/pirate/       Quaternius Pirate Kit for Treasure Seas: all 72 models -> pirate.bundle.js (21 MB)
+                         A folder with a `.bundle` file = one lazy bundle: NOT in index.html; the game declares
+                         `assets: ['pirate/']` and the shell runs Assets.load() (injects the script + parses) behind the loader.
 app/assets/medieval/     Quaternius Modular Medieval Buildings (towers, walls, Well, Banner...) the same way
                          use: Kit3D.prop(S, 'nature/nature', 'Tree1', { height, colors: { Celing: '#3d7bf0' } })
 app/vendor/three.bundle.js  Three.js + addons as window.THREE (rebuild: edit tools/three-entry.js, `npm run vendor`)
@@ -49,9 +51,15 @@ Menu icon: set `S.hero` (Object3D, list, or function that may pose things; only 
 - **No voices during play** (menu may speak game names only). No praise lines.
 - Buttons are read by **position** (standard mapping): 0 bottom, 1 right, 2 left, 3 top, 4 L, 5 R, 6 ZL/L2, 7 ZR/R2,
   8 select, 9 start, 12–15 D-pad. Colours by position: `U.BTN_COLORS`. Never exit a game except via SELECT+START hold / Esc.
-- Free-roam games (Dino World, Tractor Farm, Sand Digger, Dragon Sky) and Block Hop (side-on follow camera) keep a fixed or chase camera: toddlers can't control a camera.
+- Free-roam games (Dino World, Tractor Farm, Sand Digger, Dragon Sky) Block Hop (side-on follow camera) and Treasure Seas (fixed angle) keep a fixed or chase camera: toddlers can't control a camera.
 
 ## Rules (rendering) learned the hard way
+- Pirate Kit: ships and the cannon face -X (rotate +PI/2 to face +Z); characters/shark face +Z; each pirate holds its
+  weapon on a `Weapon_*` node under a hand bone (Treasure Seas hangs the lute there). Flat props (anchor, X) need
+  `scale`, not `height`, or they blow up. Treasure Seas' camera always looks north, so tall scenery (cliffs, houses,
+  skull, palms) fades see-through when it stands between the camera and you (`tall()` in buildIsland).
+- Treasure Seas world: 64-unit cells built one per frame around you (5x5) and dropped beyond 3; `cellState` remembers
+  dug treasure / found crew / taken items per cell. `__stage.debug` and `__stage.state()` for tests.
 - Cube World props use a 32px colour-palette atlas (1px cells): keep linear filtering (NearestFilter picks neighbour
   cells, e.g. black mushroom caps); only the 80px pixel-art blocks (`?`, blank) get NearestFilter. Two Flowers materials
   are empty in the source (coloured in code); the Mushroom's cap UVs hit a dark cell (not used).
@@ -83,7 +91,7 @@ Menu icon: set `S.hero` (Object3D, list, or function that may pose things; only 
 - Infinite worlds: ground follows the player with texture offset; props wrap around a square (`scatter`, area ~130) hidden by fog (~36–66).
 
 ## Games (menu order)
-button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger · dragon-sky · block-hop
+button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger · dragon-sky · block-hop · treasure-seas
 
 ## Ideas not done yet
 - Big cartoon eyes attached to the dino `Head` bone.
