@@ -460,6 +460,15 @@ const Kit3D = (() => {
       }
     }
 
+    // Overlays are added on top of the bone pose, so undo them before the next mixer.update().
+    // (The mixer skips writing a bone whose clip value didn't change, e.g. constant Head tracks in Walk:
+    //  without this the overlay accumulates every frame and the head spins.)
+    const overlaid = ['FrontUpLegL', 'FrontUpLegR', 'BackUpLegL', 'BackUpLegR', 'Neck', 'Head', 'Tail1', 'Tail2', 'Tail3', 'Tail4', 'Tail5']
+      .map(n => B[n]).concat(['FrontFootL', 'FrontFootR', 'BackFootL', 'BackFootR'].map(target)).filter(Boolean);
+    const base = overlaid.map(b => ({ b, q: b.quaternion.clone(), p: b.position.clone() }));
+    const saveBase = () => { for (const s of base) { s.q.copy(s.b.quaternion); s.p.copy(s.b.position); } };
+    const restoreBase = () => { for (const s of base) { s.b.quaternion.copy(s.q); s.b.position.copy(s.p); } };
+
     const DUR = { roar: 1.2, sneeze: 1.4, dance: 2.6, waveL: 1.8, waveR: 1.8, legL: 1.3, legR: 1.3, clap: 0.45, spin: 0.8, headbang: 0.5, happy: 0.7 };
     const act = {};
     let t = 0, air = false, jt = 0, squash = 0;
@@ -492,7 +501,9 @@ const Kit3D = (() => {
         if (A.Run) { A.Run.setEffectiveWeight(wRun * free); A.Run.setEffectiveTimeScale(U.clamp(s / 5.5, 0.7, 1.8)); }
         if (A.Attack && A.Attack.isRunning() && A.Attack.time > A.Attack.getClip().duration - 0.25 && !A.Attack.userData) { A.Attack.fadeOut(0.25); A.Attack.userData = 1; }
         if (A.Attack && !A.Attack.isRunning()) A.Attack.userData = 0;
+        restoreBase();
         mixer.update(dt);
+        saveBase();
         for (const [b, v] of Object.entries(spec.cartoon || {})) if (B[b]) B[b].scale.setScalar(v);
 
         // jump timing (the clip itself lifts the body)

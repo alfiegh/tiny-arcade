@@ -43,6 +43,7 @@ Toddlers can't leave a game by accident: only the two-button hold or the keyboar
 | 🎈 **Balloon Pop** | Meadow. Fly the magic star to a balloon and press any button to pop it. |
 | 🦖 **Dino World** | Endless meadow as a T-rex. Walk anywhere. Each spotted egg hatches a different baby dino (Triceratops, Stegosaurus, Raptor...) who follows you and copies what you do. |
 | 🚜 **Tractor Farm** | Endless farm. Drive anywhere. Animals hop and call out; hay bales and pumpkins get pushed around. |
+| 🏗️ **Sand Digger** | Endless sandy yard in a big wheel loader. Drive the bucket into a brown dig mound to fill it, press the bottom button to tip it out: dumping on the same spot builds a taller and taller sand pile (flag at 5 loads, sparkles and confetti after that). |
 
 ### Dino World buttons
 
@@ -69,7 +70,20 @@ Toddlers can't leave a game by accident: only the two-button hold or the keyboar
 | Top | Raise / lower the front bucket |
 | L / R | Left / right blinkers |
 
-Both free-roam games show a small controller map in the corner for grown-ups (`showGuides` in config).
+### Sand Digger buttons
+
+| Button | Action |
+|---|---|
+| Stick up / down | Drive forward / reverse (backup beeper) |
+| Stick left / right | Steer (the loader bends in the middle) |
+| ZR / ZL (hold) | Forward / reverse |
+| Bottom | Dump the sand (empty bucket: a shake) |
+| Right | Horn |
+| Left | Flashing beacon on/off |
+| Top | Lift / lower the bucket arm |
+| L / R | Bounce |
+
+The free-roam games show a small controller map in the corner for grown-ups (`showGuides` in config).
 
 Design rules every game follows: no losing, no timers, no reading needed, any button does something, generous targets, and no voices praising or talking during play.
 
