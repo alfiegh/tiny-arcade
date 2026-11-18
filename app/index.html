@@ -11,6 +11,8 @@
 <canvas id="stage"></canvas>
 <div id="parent-hint">Grown-ups: hold SELECT + START (or press Esc) for the menu</div>
 <div id="back-meter"><div></div></div>
+<!-- loading screen while a game builds (CSS-only animation keeps moving even while the page is busy) -->
+<div id="loader"><div class="ld-ring"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="ld-tile"><span class="ld-emoji"></span></div></div>
 
 <script src="config.js"></script>
 <script src="core/util.js"></script>
@@ -32,6 +34,8 @@
 <script src="assets/bulldozer/bulldozer.glb.js"></script>
 <!-- rigged dragon for Dragon Sky (converted from the "Dragon Rigged and Game Ready" FBX) -->
 <script src="assets/dragon/dragon.glb.js"></script>
+<script src="assets/medieval/medieval.glb.js"></script>
+<script src="assets/nature/nature.glb.js"></script>
 <script src="core/assets.js"></script>
 
 <!-- games appear in the menu in this order -->

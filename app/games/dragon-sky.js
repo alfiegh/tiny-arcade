@@ -55,17 +55,28 @@ Games.register({
     }
     const hillMs = ['#6fc24a', '#7fcf55', '#5fb544'].map(c => mat(c, { roughness: 0.95 }));
     function hill() { const g = new T.Group(); const h = mesh(geo.sphere, U.pick(hillMs)); h.scale.set(U.rand(6, 11), U.rand(2, 4), U.rand(6, 11)); g.add(h); return g; }
-    const stoneM = mat('#cfc6bd', { roughness: 0.85 }), roofMs = ['#e63946', '#2a6fdb', '#8e44ad'].map(c => mat(c, { roughness: 0.6 }));
-    function tower() {
-      const g = new T.Group();
-      const t = mesh(geo.cyl, stoneM); t.scale.set(1.6, 9, 1.6); t.position.y = 4.5; g.add(t);
-      for (let k = 0; k < 8; k++) { const b = mesh(geo.box, stoneM); const a = k / 8 * Math.PI * 2; b.scale.set(0.6, 0.7, 0.6); b.position.set(Math.cos(a) * 1.55, 9.3, Math.sin(a) * 1.55); g.add(b); }
-      const bowl = mesh(geo.cyl, mat('#5b4636', { roughness: 0.8 })); bowl.scale.set(0.9, 0.5, 0.9); bowl.position.y = 9.4; g.add(bowl);
-      const flag = mesh(geo.box, U.pick(roofMs)); flag.scale.set(0.05, 0.7, 1.1); flag.position.set(0, 11.6, 0.55); g.add(flag);
-      const pole = mesh(geo.cyl, mat('#f4f1ea')); pole.scale.set(0.05, 2.4, 0.05); pole.position.y = 10.8; g.add(pole);
-      const f = staticFlame(1.1); f.position.y = 9.65; g.add(f);
-      g.userData.flame = f; g.userData.fireAt = new T.Vector3(0, 10, 0); return g;
+    const stoneM = mat('#cfc6bd', { roughness: 0.85 });
+    // medieval castle pieces (Quaternius "Modular Medieval Buildings", app/assets/medieval)
+    const MED = 'medieval/medieval', med = (name, o) => Kit3D.prop(S, MED, name, o);
+    const roofCols = ['#e5484d', '#3d7bf0', '#9b5de5', '#ff9f1c'];
+    function tower() {   // a flat-topped tower with a fire bowl on top to light
+      const H = U.rand(8.8, 10);
+      const g = med(U.pick(['Tower', 'LargeTower', 'LargeSquareTowerBricks', 'Tower']), { height: H });
+      const bowl = mesh(geo.cyl, mat('#5b4636', { roughness: 0.8 })); bowl.scale.set(0.8, 0.45, 0.8); bowl.position.y = H - 0.15; g.add(bowl);
+      const f = staticFlame(1.1); f.position.y = H + 0.05; g.add(f);
+      g.userData.flame = f; g.userData.fireAt = new T.Vector3(0, H + 0.4, 0); g.userData.clear = { r: 4.5, h: H + 3.4 }; return g;
     }
+    function castle() {  // gate + walls + pointy corner towers, roof colour per castle
+      const g = new T.Group(), k = 2.3, roof = { Celing: U.pick(roofCols) };
+      const add = (name, x, z = 0, ry = 0) => { const p = med(name, { scale: k, colors: roof }); p.position.set(x, 0, z); p.rotation.y = ry; g.add(p); return p; };
+      add('WallEntranceBricks', 0); add('WallBricks', -1.54 * k); add('WallBricks', 1.54 * k);
+      add('PointyTower', -2.6 * k); add('PointyTower', 2.6 * k);
+      const ban = add('Banner', 0, 0.2 * k); ban.position.y = 1.55 * k - 0.1;
+      g.userData.clear = { r: 8, h: 5.4 * k + 2.5 }; return g;
+    }
+    function watchtower() { const g = med('WatchTowerWRoof', { height: 7.5, colors: { Celing: U.pick(roofCols) } }); g.userData.clear = { r: 3.5, h: 10.5 }; return g; }
+    function well() { return med('Well', { height: 2.2, colors: { Celing: U.pick(roofCols) } }); }
+    function target() { return med(U.pick(['Target', 'TargetWithArrows']), { height: 1.8 }); }
     function campfire() {
       const g = new T.Group();
       for (let k = 0; k < 4; k++) { const l = mesh(geo.cyl, trunkM); l.scale.set(0.15, 1.3, 0.15); l.rotation.set(Math.PI / 2, k * Math.PI / 4, 0); l.position.y = 0.15; g.add(l); }
@@ -94,7 +105,11 @@ Games.register({
     const world = Kit3D.scatter(S, [
       { make: hill, count: 10, radius: 7, kind: 'deco' },
       { make: tree, count: 28, radius: 1.2, kind: 'deco' },
-      { make: tower, count: 7, radius: 1.8, kind: 'tower' },
+      { make: tower, count: 6, radius: 1.8, kind: 'tower' },
+      { make: castle, count: 3, radius: 8, kind: 'castle' },
+      { make: watchtower, count: 4, radius: 2, kind: 'deco' },
+      { make: well, count: 5, radius: 1, kind: 'deco' },
+      { make: target, count: 6, radius: 0.8, kind: 'deco' },
       { make: campfire, count: 12, radius: 1, kind: 'camp' },
       { make: lantern, count: 22, radius: 1.2, kind: 'lantern' },
       { make: cloud, count: 14, radius: 3, kind: 'cloud' },
@@ -232,11 +247,11 @@ Games.register({
         const floor = 3 + groundHeight(pos.x, pos.z);
         if (pos.y < floor) { pos.y = U.lerp(pos.y, floor, Math.min(1, dt * 8)); vy = Math.max(0, vy); }
         if (pos.y > 24) { pos.y = 24; vy = Math.min(0, vy); }
-        // castle towers are tall: glide up and over them instead of bumping
+        // towers and castles are tall: glide up and over them instead of bumping
         world.list.forEach(o => {
-          if (o.userData.kind !== 'tower') return;
+          const c = o.userData.clear; if (!c) return;
           const d = Math.hypot(o.position.x - pos.x, o.position.z - pos.z);
-          if (d < 4.5 && pos.y < 13) pos.y = U.lerp(pos.y, 13, Math.min(1, dt * 6));
+          if (d < c.r && pos.y < c.h) pos.y = U.lerp(pos.y, c.h, Math.min(1, dt * 6));
         });
 
         // tricks
@@ -318,7 +333,7 @@ Games.register({
         breathCam = U.lerp(breathCam, breathing ? 1 : 0, Math.min(1, dt * 2.5));
         const camGoal = pos.clone().addScaledVector(f, -13 + breathCam * 4).add(new T.Vector3(-f.z * breathCam * 10, 5.5 + breathCam * 2.5, f.x * breathCam * 10));   // swings to a 3/4 view while breathing so the flame stream shows
         camGoal.y = Math.max(2.5 + groundHeight(camGoal.x, camGoal.z), camGoal.y);
-        world.list.forEach(o => { if (o.userData.kind === 'tower' && Math.hypot(o.position.x - camGoal.x, o.position.z - camGoal.z) < 3.5) camGoal.y = Math.max(camGoal.y, 12.5); });
+        world.list.forEach(o => { const c = o.userData.clear; if (c && Math.hypot(o.position.x - camGoal.x, o.position.z - camGoal.z) < c.r - 1) camGoal.y = Math.max(camGoal.y, c.h - 0.5); });
         camera.position.lerp(camGoal, Math.min(1, dt * 2.2));
         camera.lookAt(pos.x + f.x * 9, pos.y - 1, pos.z + f.z * 9);
         skyDome.position.copy(camera.position);

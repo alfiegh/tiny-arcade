@@ -26,6 +26,14 @@
 
   let mode = 'menu', current = null, selected = 0, scroll = 0, t = 0, fade = 1, pending = null;
   let hintTimer = 0;
+  // loading screen: shown once the fade is fully dark, kept up while the game builds and its first frames compile shaders
+  const loaderEl = document.getElementById('loader');
+  let loadFrames = 0, loaderHideIn = 0;
+  function showLoader(game) {
+    loaderEl.querySelector('.ld-emoji').textContent = game.emoji;
+    loaderEl.querySelector('.ld-tile').style.background = game.color;
+    loaderEl.classList.add('on'); loadFrames = 0;
+  }
   let assetsReady = typeof Assets === 'undefined';
   if (!assetsReady) Assets.ready.then(() => { assetsReady = true; });
   const bubbles = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), r: U.rand(10, 46), s: U.rand(0.02, 0.06), c: U.pick(U.RAINBOW) }));
@@ -39,6 +47,7 @@
       mode = 'game';
       showHint();
     };
+    pending.loading = Games.list[i];
   }
   function toMenu() {
     if (mode === 'menu') return;
@@ -155,7 +164,16 @@
     hintEl.classList.toggle('hidden', hintTimer <= 0 && mode === 'game');
 
     // fade transitions
-    if (pending) { fade = Math.min(1, fade + dt * 4); if (fade >= 1 && assetsReady) { pending(); pending = null; } }   // waits for 3D models on first launch
+    if (pending) {
+      fade = Math.min(1, fade + dt * 4);
+      if (fade >= 1) {
+        const game = pending.loading;
+        if (game && !loaderEl.classList.contains('on')) showLoader(game);
+        if (game) loadFrames++;
+        // wait for the 3D models (first launch) and let the loader paint before the heavy create()
+        if (assetsReady && (!game || loadFrames > 2)) { pending(); pending = null; if (game) loaderHideIn = 3; }
+      }
+    }
     else fade = Math.max(0, fade - dt * 3);
 
     if (!pending) {
@@ -168,6 +186,7 @@
     Fx.draw(ctx);
 
     if (fade > 0) { ctx.fillStyle = `rgba(27,20,64,${fade})`; ctx.fillRect(0, 0, api.w, api.h); }
+    if (loaderHideIn > 0 && --loaderHideIn === 0) loaderEl.classList.remove('on');   // game has drawn a few frames: fade the loader out
     requestAnimationFrame(frame);
   }
 

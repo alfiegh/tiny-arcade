@@ -2,6 +2,8 @@
 
 Gentle 3D controller games for a little player (around age 3), built with Electron and Three.js.
 Dinosaur models: [Animated LowPoly Dinosaurs](https://quaternius.itch.io/animated-lowpoly-dinosaurs) by Quaternius (CC0).
+Scenery: Simple Nature Pack (trees, bushes, rocks, grass: Tractor Farm, Dino World, Balloon Pop) and Modular Medieval
+Buildings (castles, towers, watchtowers: Dragon Sky) by Quaternius (CC0).
 Made for 8BitDo controllers, but any gamepad works. The keyboard works too.
 
 ## Run it

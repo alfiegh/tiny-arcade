@@ -16,3 +16,23 @@ canvas { display: block; width: 100vw; height: 100vh; }
 }
 #back-meter.on { opacity: 1; }
 #back-meter div { height: 100%; width: 0%; background: #fff; border-radius: 0 4px 4px 0; }
+
+/* loading screen: game tile bouncing inside a spinning ring of rainbow dots (transform-only animations run off the main thread) */
+#loader { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
+  background: rgb(27, 20, 64); opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+#loader.on { opacity: 1; transition: none; }
+#loader .ld-tile { width: 26vmin; height: 26vmin; border-radius: 22%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2vmin 5vmin rgba(0,0,0,.35); border: 1vmin solid #fff; will-change: transform; animation: ld-bounce .9s ease-in-out infinite; }
+#loader .ld-emoji { font-size: 15vmin; line-height: 1; }
+#loader .ld-ring { position: absolute; width: 52vmin; height: 52vmin; will-change: transform; animation: ld-spin 1.6s linear infinite; }
+#loader .ld-ring i { position: absolute; left: 50%; top: 50%; width: 4.6vmin; height: 4.6vmin; margin: -2.3vmin; border-radius: 50%; }
+#loader .ld-ring i:nth-child(1) { background: #ff4d6d; transform: rotate(0deg) translateY(-24vmin) scale(0.55); }
+#loader .ld-ring i:nth-child(2) { background: #ff9f1c; transform: rotate(45deg) translateY(-24vmin) scale(0.61); }
+#loader .ld-ring i:nth-child(3) { background: #ffd23f; transform: rotate(90deg) translateY(-24vmin) scale(0.68); }
+#loader .ld-ring i:nth-child(4) { background: #7ed957; transform: rotate(135deg) translateY(-24vmin) scale(0.75); }
+#loader .ld-ring i:nth-child(5) { background: #3fc1ff; transform: rotate(180deg) translateY(-24vmin) scale(0.81); }
+#loader .ld-ring i:nth-child(6) { background: #5e7bff; transform: rotate(225deg) translateY(-24vmin) scale(0.88); }
+#loader .ld-ring i:nth-child(7) { background: #b06bff; transform: rotate(270deg) translateY(-24vmin) scale(0.94); }
+#loader .ld-ring i:nth-child(8) { background: #ff6fd8; transform: rotate(315deg) translateY(-24vmin) scale(1.01); }
+@keyframes ld-spin { to { transform: rotate(360deg); } }
+@keyframes ld-bounce { 0%, 100% { transform: translateY(0) scale(1, 1); } 45% { transform: translateY(-4vmin) scale(.96, 1.04); } 85% { transform: translateY(0) scale(1.06, .94); } }

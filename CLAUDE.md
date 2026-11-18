@@ -18,13 +18,16 @@ app/config.js            settings (voice, volume, rumble, stickSpeed, backHoldSe
 app/core/input.js        all pads + keyboard merged: Input.x/.y, .pressed[], .actions[], .down, .rumble()
 app/core/audio.js        Sfx: every sound synthesised (note, pop, drum, roar, horn, moo, engine()…)
 app/core/fx.js           2D particles/confetti/floating emoji on the overlay canvas
-app/core/three-kit.js    Kit3D: stage, sky, sun, makeDinoModel, infiniteGround, scatter, decals, drawGuide
+app/core/three-kit.js    Kit3D: stage, sky, sun, makeDinoModel, infiniteGround, scatter, decals, drawGuide, prop
 app/core/assets.js       parses packed models: Assets.ready, Assets.get('dinos/trex')
-app/core/shell.js        menu carousel + game loop + parent exit (hold SELECT+START / Esc)
+app/core/shell.js        menu carousel + game loop + loading screen (#loader) + parent exit (hold SELECT+START / Esc)
 app/games/*.js           one file per game, each calls Games.register({ id, name, emoji, color, create(api) })
 app/assets/dinos/        Quaternius CC0 dinos: .glb (source) + .glb.js (packed; what the app loads)
 app/assets/bulldozer/    "Wheel loader" model for Sand Digger (textures embedded in the .glb)
 app/assets/dragon/       rigged dragon for Dragon Sky (from "Dragon Rigged and Game Ready" Unity package FBX)
+app/assets/nature/       Quaternius Simple Nature (Tree1-4, Bush1-3, Rock1-3, Grass1-3) as one .glb, one named node per model
+app/assets/medieval/     Quaternius Modular Medieval Buildings (towers, walls, Well, Banner...) the same way
+                         use: Kit3D.prop(S, 'nature/nature', 'Tree1', { height, colors: { Celing: '#3d7bf0' } })
 app/vendor/three.bundle.js  Three.js + addons as window.THREE (rebuild: edit tools/three-entry.js, `npm run vendor`)
 tools/pack-assets.js     .glb -> .glb.js (`npm run assets`)
 tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
@@ -44,6 +47,11 @@ tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
 - Free-roam games (Dino World, Tractor Farm, Sand Digger, Dragon Sky) keep a fixed or chase camera: toddlers can't control a camera.
 
 ## Rules (rendering) learned the hard way
+- The nature/medieval packs were built from the OBJ files (their .mtl colours were lost on export, so colours are set
+  by material name: medieval `Celing` = roof, `LightRock`/`DarkRock` = stone, `Black` = window holes). Stone is a warm
+  grey, not white, or it blooms. Only `Leaves` (grass blades are single planes) is double-sided: double-sided closed
+  meshes get shadow acne.
+- Game create() blocks the page; the loader is a DOM overlay with transform-only CSS animations so it keeps moving.
 - Textures embedded in a .glb load via `blob:` URLs: the CSP in index.html must keep `img-src` and `connect-src` allowing
   `blob: data:`, or textured models silently render plain white. Test pages need the same CSP to catch this.
 - Glossy clearcoat on **big flat surfaces** mirrors the studio environment and blooms white: use satin (`roughness ~0.5`).

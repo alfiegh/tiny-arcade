@@ -41,24 +41,17 @@ Games.register({
       for (let k = 0; k < 3; k++) { const c = mesh(geo.sphereLo, mat('#6b4a2b')); c.scale.setScalar(0.18); c.position.set(x + Math.cos(k * 2) * 0.25, y - 0.25, Math.sin(k * 2) * 0.25); g.add(c); }
       g.scale.setScalar(U.rand(0.9, 1.3)); return g;
     }
-    function roundTree() {
-      const g = new T.Group();
-      const tr = mesh(geo.cyl, trunkM); tr.scale.set(0.35, 2.6, 0.35); tr.position.y = 1.3; g.add(tr);
-      [[0, 3.3, 0, 1.6], [0.9, 2.8, 0.3, 1.1], [-0.9, 2.9, -0.2, 1.15], [0.1, 4.3, 0.1, 1.1]].forEach(([a, b, c, r], i) => { const l = mesh(geo.sphereLo, leafMs[i % 4]); l.scale.setScalar(r); l.position.set(a, b, c); g.add(l); });
-      g.scale.setScalar(U.rand(0.9, 1.4)); return g;
-    }
+    // trees, rocks, bushes and grass from the Simple Nature pack (Quaternius, app/assets/nature)
+    const nat = (name, o) => Kit3D.prop(S, 'nature/nature', name, o);
+    function roundTree() { return nat(U.pick(['Tree1', 'Tree2', 'Tree3', 'Tree4']), { height: U.rand(4.5, 7) }); }
+    function bush() { return nat(U.pick(['Bush1', 'Bush2', 'Bush3']), { height: U.rand(1, 1.6) }); }
+    function grass() { return nat(U.pick(['Grass1', 'Grass2', 'Grass3']), { height: U.rand(0.5, 0.9) }); }
     function fern() {
       const g = new T.Group(); const m = U.pick(leafMs);
       for (let k = 0; k < 7; k++) { const c = mesh(geo.cone, m); c.scale.set(0.12, 1.3, 0.3); c.position.y = 0.55; c.rotation.set(Math.cos(k) * 0.6, k, Math.sin(k) * 0.6); g.add(c); }
       g.scale.setScalar(U.rand(0.7, 1.2)); return g;
     }
-    const rockGeos = [0, 1, 2].map(seed => {
-      const g = S.track(new T.IcosahedronGeometry(1, 1)); const p = g.attributes.position;
-      for (let i = 0; i < p.count; i++) { const k = 0.75 + Kit3D.hash(p.getX(i) * 3 + seed, p.getZ(i) * 3) * 0.45; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.7, p.getZ(i) * k); }
-      g.computeVertexNormals(); return g;
-    });
-    const rockM = mat('#9aa3ab', { roughness: 0.9, flatShading: true });
-    function rock() { const r = mesh(U.pick(rockGeos), rockM); const g = new T.Group(); r.position.y = 0.3; g.add(r); g.scale.setScalar(U.rand(0.5, 1.4)); return g; }
+    function rock() { return nat(U.pick(['Rock1', 'Rock2', 'Rock3']), { height: U.rand(0.6, 1.6) }); }
     const flowerMs = ['#ff5fa2', '#ffd23f', '#ffffff', '#9b5de5', '#ff9f1c', '#3fa7ff'].map(c => mat(c, { roughness: 0.6 }));
     const stemM = mat('#3f9b3f');
     function flowers() {
@@ -90,6 +83,8 @@ Games.register({
       { make: roundTree, count: 18, radius: 1.2 },
       { make: fern, count: 40, radius: 0.6 },
       { make: rock, count: 28, radius: 0.9 },
+      { make: bush, count: 24, radius: 0.8 },
+      { make: grass, count: 50, radius: 0.4 },
       { make: flowers, count: 70, radius: 0.5 },
       { make: mushroom, count: 16, radius: 0.5 },
       { make: egg, count: 9, radius: 0.6, kind: 'egg' },

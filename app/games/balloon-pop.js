@@ -29,14 +29,13 @@ Games.register({
     [[-30, -50, 22], [5, -65, 30], [38, -55, 24], [-60, -70, 28], [70, -75, 30]].forEach(([x, z, r], i) => {
       const h = mesh(geo.sphere, i % 2 ? hillM : hill2, { shadow: false }); h.scale.set(r * 1.4, r * 0.55, r); h.position.set(x, GROUND_Y - 2, z); scene.add(h);
     });
-    const trunkM = mat('#8a5a3c', { roughness: 0.9 }), leafMs = ['#3fa34d', '#57b947', '#2f8f45'].map(c => mat(c, { roughness: 0.8 }));
-    function tree(x, z, s) {
-      const g = new T.Group(); g.position.set(x, GROUND_Y, z); g.scale.setScalar(s);
-      const tr = mesh(geo.cyl, trunkM); tr.scale.set(0.3, 2.2, 0.3); tr.position.y = 1.1; g.add(tr);
-      [[0, 2.8, 0, 1.3], [0.7, 2.4, 0.2, 0.9], [-0.7, 2.5, -0.1, 0.95], [0, 3.6, 0, 0.9]].forEach(([a, b, c, r], i) => { const l = mesh(geo.sphereLo, leafMs[i % 3]); l.scale.setScalar(r); l.position.set(a, b, c); g.add(l); });
-      scene.add(g);
-    }
-    [[-16, -10, 1.6], [-21, -18, 2], [17, -8, 1.5], [23, -16, 2.1], [-10, -24, 1.8], [11, -26, 2]].forEach(a => tree(...a));
+    // trees, bushes, rocks and grass from the Simple Nature pack (Quaternius, app/assets/nature)
+    const nat = (name, x, z, h) => { const g = Kit3D.prop(S, 'nature/nature', name, { height: h }); g.position.set(x, GROUND_Y, z); g.rotation.y = U.rand(0, 6.3); scene.add(g); return g; };
+    [[-16, -10, 7], [-21, -18, 9], [17, -8, 6.5], [23, -16, 9.5], [-10, -24, 8], [11, -26, 9], [-30, -30, 10], [32, -28, 10]]
+      .forEach(([x, z, h], i) => nat(['Tree1', 'Tree2', 'Tree3', 'Tree4'][i % 4], x, z, h));
+    [[-12, -6], [13, -5], [-19, -4], [20, -12], [-6, -16], [7, -18]].forEach(([x, z], i) => nat(['Bush1', 'Bush2', 'Bush3'][i % 3], x, z, U.rand(1.4, 2)));
+    [[-14, -14], [15, -20], [-24, -9], [26, -6]].forEach(([x, z], i) => nat(['Rock1', 'Rock2', 'Rock3'][i % 3], x, z, U.rand(1.2, 2.2)));
+    for (let i = 0; i < 40; i++) nat(U.pick(['Grass1', 'Grass2', 'Grass3']), U.rand(-26, 26), U.rand(-22, 4), U.rand(0.6, 1));
     const flowerMs = ['#ff5fa2', '#ffd23f', '#ffffff', '#9b5de5', '#ff9f1c'].map(c => mat(c, { roughness: 0.6 }));
     for (let i = 0; i < 90; i++) {
       const f = mesh(geo.sphereLo, U.pick(flowerMs), { shadow: false });
@@ -55,10 +54,10 @@ Games.register({
     const starShape = new T.Shape();
     for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.3 : 0.7, a = Math.PI / 2 + i * Math.PI / 5; i ? starShape.lineTo(Math.cos(a) * r, Math.sin(a) * r) : starShape.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
     const starGeo = S.track(new T.ExtrudeGeometry(starShape, { depth: 0.25, bevelEnabled: true, bevelThickness: 0.12, bevelSize: 0.1, bevelSegments: 4 })).center();
-    const wand = mesh(starGeo, mat('#ffcc33', { metalness: 0.5, roughness: 0.2, emissive: '#ffb300', emissiveIntensity: 2.2 }));
-    const halo = new T.Sprite(S.track(new T.SpriteMaterial({ map: S.sparkTex, color: '#fff2a8', transparent: true, opacity: 0.5, blending: T.AdditiveBlending, depthWrite: false })));
-    halo.scale.setScalar(4.2); wand.add(halo);
-    const wandLight = new T.PointLight('#ffd76a', 12, 8, 1.6); wand.add(wandLight);
+    const wand = mesh(starGeo, mat('#ffb800', { metalness: 0, roughness: 0.5, emissive: '#ff8c00', emissiveIntensity: 0.18 }));
+    const halo = new T.Sprite(S.track(new T.SpriteMaterial({ map: S.sparkTex, color: '#ffd76a', transparent: true, opacity: 0.1, blending: T.AdditiveBlending, depthWrite: false })));
+    halo.scale.setScalar(3); wand.add(halo);
+    const wandLight = new T.PointLight('#ffd76a', 3, 8, 1.6); wand.add(wandLight);
     scene.add(wand);
     const wp = new T.Vector3(0, 2, 1), wv = new T.Vector3();
     let zap = 0;
@@ -114,7 +113,7 @@ Games.register({
         wand.rotation.z = Math.sin(t * 2) * 0.2 - wv.x * 0.03 + zap * 2;
         wand.rotation.y = t * 1.5;
         wand.scale.setScalar(1 + zap * 0.35);
-        if (input.moving && Math.random() < 0.6) S.sparkle(wand.position, U.pick(['#fff2a8', '#ffd23f', '#ffffff']), 2, 1, { gravity: 1.5, life: 0.7 });
+        if (input.moving && Math.random() < 0.6) S.sparkle(wand.position, U.pick(['#fff2a8', '#ffd23f', '#ffb347']), 2, 1, { gravity: 1.5, life: 0.7, glow: 1.2 });
 
         spawn -= dt;
         if (spawn <= 0 && balloons.length < 7) { addBalloon(); spawn = U.rand(0.9, 1.5); }
@@ -144,7 +143,7 @@ Games.register({
           const hits = balloons.filter(b => b.hover);
           if (hits.length) hits.forEach(pop);
           else { sfx.chime(); }
-          S.sparkle(wand.position, '#fff2a8', 24, 5, { life: 0.6 });
+          S.sparkle(wand.position, '#ffd76a', 24, 5, { life: 0.6, glow: 1.4 });
         }
         balloons = balloons.filter(b => { if (b.popped) return false; if (b.g.position.y > B.yMax + 6) { scene.remove(b.g); b.lg.dispose(); return false; } return true; });
         clouds.forEach(c => { c.position.x += c.userData.v * dt; if (c.position.x > 50) c.position.x = -50; });

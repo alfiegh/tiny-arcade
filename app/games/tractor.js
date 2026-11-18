@@ -34,13 +34,12 @@ Games.register({
 
     // ---------- farm props ----------
     const red = mat('#d62828', { roughness: 0.6 }), white = mat('#f4f1ea', { roughness: 0.7 }), roofM = mat('#5b4636', { roughness: 0.8 });
-    const trunkM = mat('#8a5a3c', { roughness: 0.9 }), leafMs = ['#3fa34d', '#57b947', '#2f8f45'].map(c => mat(c, { roughness: 0.8 }));
-    function tree() {
-      const g = new T.Group();
-      const tr = mesh(geo.cyl, trunkM); tr.scale.set(0.35, 2.6, 0.35); tr.position.y = 1.3; g.add(tr);
-      [[0, 3.3, 0, 1.7], [0.9, 2.8, 0.3, 1.1], [-0.9, 2.9, -0.2, 1.2], [0.1, 4.3, 0.1, 1.1]].forEach(([a, b, c, r], i) => { const l = mesh(geo.sphereLo, leafMs[i % 3]); l.scale.setScalar(r); l.position.set(a, b, c); g.add(l); });
-      g.scale.setScalar(U.rand(0.9, 1.3)); return g;
-    }
+    // trees, rocks, bushes and grass from the Simple Nature pack (Quaternius, app/assets/nature)
+    const nat = (name, o) => Kit3D.prop(S, 'nature/nature', name, o);
+    function tree() { return nat(U.pick(['Tree1', 'Tree2', 'Tree3', 'Tree4']), { height: U.rand(4.5, 6.5) }); }
+    function rock() { return nat(U.pick(['Rock1', 'Rock2', 'Rock3']), { height: U.rand(0.9, 1.5) }); }
+    function bush() { return nat(U.pick(['Bush1', 'Bush2', 'Bush3']), { height: U.rand(1, 1.5) }); }
+    function grass() { return nat(U.pick(['Grass1', 'Grass2', 'Grass3']), { height: U.rand(0.5, 0.8) }); }
     function barn() {
       const g = new T.Group();
       const b = mesh(geo.box, red); b.scale.set(5, 3.6, 6); b.position.y = 1.8; g.add(b);
@@ -119,6 +118,9 @@ Games.register({
 
     const world = Kit3D.scatter(S, [
       { make: tree, count: 22, radius: 1.1, kind: 'solid' },
+      { make: rock, count: 10, radius: 1.1, kind: 'solid' },
+      { make: bush, count: 18, radius: 0.8, kind: 'soft' },
+      { make: grass, count: 40, radius: 0.4, kind: 'soft' },
       { make: barn, count: 3, radius: 4.2, kind: 'solid' },
       { make: windmill, count: 3, radius: 1.3, kind: 'solid' },
       { make: hay, count: 14, radius: 1.3, kind: 'push' },

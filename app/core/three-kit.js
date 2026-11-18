@@ -4,7 +4,7 @@
 //   S.scene / S.camera / S.track(disposable) / S.sparkle(pos, color, n, speed, opts) / S.ring(pos, color)
 //   S.update(dt); S.render(); S.resize(); S.destroy();
 //
-// Also: Kit3D.sky(), Kit3D.sun(), Kit3D.makeDino(), Kit3D.infiniteGround(), Kit3D.scatter(), Kit3D.drawGuide()
+// Also: Kit3D.sky(), Kit3D.sun(), Kit3D.makeDino(), Kit3D.infiniteGround(), Kit3D.scatter(), Kit3D.drawGuide(), Kit3D.prop()
 const Kit3D = (() => {
   const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 
@@ -681,5 +681,24 @@ const Kit3D = (() => {
     ctx.restore();
   }
 
-  return { stage, sky, sun, eye, makeDino, makeDinoModel, DINO_SPECIES, infiniteGround, scatter, decals, drawGuide, hash };
+  // Static low-poly props from the packed model packs (Quaternius CC0, app/assets/nature + app/assets/medieval).
+  //   Kit3D.prop(S, 'nature/nature', 'Tree1', { height: 5 })   -> Group standing on y=0, casting shadows
+  //   options: height (world units, sets scale) or scale; colors: { MaterialName: '#hex' } recolours per stage
+  function prop(S, pack, name, { height, scale = 1, colors } = {}) {
+    const g = new S.T.Group();
+    const src = typeof Assets !== 'undefined' && Assets.get(pack)?.scene.getObjectByName(name);
+    if (!src) { console.warn('missing prop', pack, name); return g; }
+    const m = src.clone(); m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.setScalar(1);
+    const cache = S._propMats || (S._propMats = {});
+    m.traverse(n => {
+      if (!n.isMesh) return;
+      n.castShadow = n.receiveShadow = true;
+      const c = colors && colors[n.material.name];
+      if (c) { const k = n.material.name + c; n.material = cache[k] || (cache[k] = S.track(n.material.clone())); n.material.color.set(c); }
+    });
+    if (height) { const b = new S.T.Box3().setFromObject(m); scale = height / Math.max(0.01, b.max.y - b.min.y); }
+    m.scale.setScalar(scale); g.add(m); return g;
+  }
+
+  return { stage, sky, sun, eye, makeDino, makeDinoModel, DINO_SPECIES, infiniteGround, scatter, decals, drawGuide, prop, hash };
 })();
