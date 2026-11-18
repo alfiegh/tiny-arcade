@@ -26,6 +26,8 @@ app/assets/dinos/        Quaternius CC0 dinos: .glb (source) + .glb.js (packed; 
 app/assets/bulldozer/    "Wheel loader" model for Sand Digger (textures embedded in the .glb)
 app/assets/dragon/       rigged dragon for Dragon Sky (from "Dragon Rigged and Game Ready" Unity package FBX)
 app/assets/nature/       Quaternius Simple Nature (Tree1-4, Bush1-3, Rock1-3, Grass1-3) as one .glb, one named node per model
+app/assets/cube/         Quaternius Cube World for Block Hop: 48 .glb (unused clips stripped) packed into ONE cube.bundle.js
+                         (a folder with a `.bundle` file is bundled by pack-assets). Assets.get('cube/Goblin') etc.
 app/assets/medieval/     Quaternius Modular Medieval Buildings (towers, walls, Well, Banner...) the same way
                          use: Kit3D.prop(S, 'nature/nature', 'Tree1', { height, colors: { Celing: '#3d7bf0' } })
 app/vendor/three.bundle.js  Three.js + addons as window.THREE (rebuild: edit tools/three-entry.js, `npm run vendor`)
@@ -47,9 +49,14 @@ Menu icon: set `S.hero` (Object3D, list, or function that may pose things; only 
 - **No voices during play** (menu may speak game names only). No praise lines.
 - Buttons are read by **position** (standard mapping): 0 bottom, 1 right, 2 left, 3 top, 4 L, 5 R, 6 ZL/L2, 7 ZR/R2,
   8 select, 9 start, 12–15 D-pad. Colours by position: `U.BTN_COLORS`. Never exit a game except via SELECT+START hold / Esc.
-- Free-roam games (Dino World, Tractor Farm, Sand Digger, Dragon Sky) keep a fixed or chase camera: toddlers can't control a camera.
+- Free-roam games (Dino World, Tractor Farm, Sand Digger, Dragon Sky) and Block Hop (side-on follow camera) keep a fixed or chase camera: toddlers can't control a camera.
 
 ## Rules (rendering) learned the hard way
+- Cube World props use a 32px colour-palette atlas (1px cells): keep linear filtering (NearestFilter picks neighbour
+  cells, e.g. black mushroom caps); only the 80px pixel-art blocks (`?`, blank) get NearestFilter. Two Flowers materials
+  are empty in the source (coloured in code); the Mushroom's cap UVs hit a dark cell (not used).
+- Block Hop: tile grid (1 unit), level built in pieces ahead / dropped behind, ground as InstancedMesh per piece;
+  `__stage.debug.P` (player) and `__stage.state()` for tests.
 - The nature/medieval packs were built from the OBJ files (their .mtl colours were lost on export, so colours are set
   by material name: medieval `Celing` = roof, `LightRock`/`DarkRock` = stone, `Black` = window holes). Stone is a warm
   grey, not white, or it blooms. Only `Leaves` (grass blades are single planes) is double-sided: double-sided closed
@@ -76,7 +83,7 @@ Menu icon: set `S.hero` (Object3D, list, or function that may pose things; only 
 - Infinite worlds: ground follows the player with texture offset; props wrap around a square (`scatter`, area ~130) hidden by fog (~36–66).
 
 ## Games (menu order)
-button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger · dragon-sky
+button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger · dragon-sky · block-hop
 
 ## Ideas not done yet
 - Big cartoon eyes attached to the dino `Head` bone.

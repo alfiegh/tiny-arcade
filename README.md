@@ -4,6 +4,7 @@ Gentle 3D controller games for a little player (around age 3), built with Electr
 Dinosaur models: [Animated LowPoly Dinosaurs](https://quaternius.itch.io/animated-lowpoly-dinosaurs) by Quaternius (CC0).
 Scenery: Simple Nature Pack (trees, bushes, rocks, grass: Tractor Farm, Dino World, Balloon Pop) and Modular Medieval
 Buildings (castles, towers, watchtowers: Dragon Sky) by Quaternius (CC0).
+Block Hop: Cube World (cube kids, enemies, animals, blocks, scenery) by Quaternius (CC0).
 Made for 8BitDo controllers, but any gamepad works. The keyboard works too.
 
 ## Run it
@@ -47,6 +48,7 @@ Toddlers can't leave a game by accident: only the two-button hold or the keyboar
 | 🚜 **Tractor Farm** | Endless farm. Drive anywhere. Animals hop and call out; pumpkins get pushed around. Drive into a hay bale with the bucket down to scoop it up, press the top button to tip it out; drop it on another bale to build a stack (confetti at three high). |
 | 🏗️ **Sand Digger** | Endless sandy yard in a big wheel loader. Drive the bucket into a brown dig mound to fill it, press the bottom button to tip it out: dumping on the same spot builds a taller and taller sand pile (flag at 5 loads, sparkles and confetti after that). |
 | 🐉 **Dragon Sky** | Fly a friendly green dragon over an endless land of hills, castles and floating lanterns. Breathe fire to light paper lanterns (they glow and float away), campfires and castle braziers; everything goes out again after a while so there is always more to light. |
+| 🍄 **Block Hop** | Side-scrolling platformer in a blocky world. Pick a cube kid, then run, jump and punch: bump `?` blocks for coins (sometimes a star for sparkly super speed), smash bricks and crates, stomp goblins and friends. Bumping into one just bounces you back; falling into water floats you back in a bubble. Every treasure chest opens with fireworks, an animal friend joins you, and the world changes (meadow, snow, cheese land, crystal cave). Endless. |
 
 ### Dino World buttons
 
@@ -98,6 +100,16 @@ Toddlers can't leave a game by accident: only the two-button hold or the keyboar
 | Left | Loop-the-loop |
 | Top | Big flap (shoots upward) |
 | L / R | Barrel roll left / right |
+
+### Block Hop buttons
+
+| Button | Action |
+|---|---|
+| Stick / D-pad | Run (left / right to pick a kid at the start) |
+| Bottom / Top | Jump (hold = higher, press again in the air = double jump) |
+| Right / Left | Punch (bonks enemies, smashes bricks and crates, opens `?` blocks) |
+| ZL / ZR (hold) | Dash |
+| L / R | Wave |
 
 The free-roam games show a small controller map in the corner for grown-ups (`showGuides` in config).
 
@@ -160,6 +172,8 @@ To add a model (or another Quaternius pack):
    From Blender: *File → Export → glTF 2.0 (.glb)* with animations ticked.
 2. Put it in `app/assets/<folder>/name.glb` and run `npm run assets`.
 3. Add `<script src="assets/<folder>/name.glb.js"></script>` to `app/index.html` (before `core/assets.js`).
+   Lots of models in one folder? Put an empty `.bundle` file in it: `npm run assets` then writes ONE
+   `<folder>/<folder>.bundle.js` with all of them (that's how `app/assets/cube/` works).
 4. Use it: `Assets.get('<folder>/name')` gives `{ scene, animations }`. Clone rigged models with
    `THREE.SkeletonUtils.clone(scene)` and play clips with a `THREE.AnimationMixer`. For another dinosaur from the same pack,
    add an entry to `Kit3D.DINO_SPECIES` and `Kit3D.makeDinoModel(S, 'name')` does the rest.
