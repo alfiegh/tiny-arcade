@@ -44,6 +44,7 @@ Toddlers can't leave a game by accident: only the two-button hold or the keyboar
 | 🦖 **Dino World** | Endless meadow as a T-rex. Walk anywhere. Each spotted egg hatches a different baby dino (Triceratops, Stegosaurus, Raptor...) who follows you and copies what you do. |
 | 🚜 **Tractor Farm** | Endless farm. Drive anywhere. Animals hop and call out; hay bales and pumpkins get pushed around. |
 | 🏗️ **Sand Digger** | Endless sandy yard in a big wheel loader. Drive the bucket into a brown dig mound to fill it, press the bottom button to tip it out: dumping on the same spot builds a taller and taller sand pile (flag at 5 loads, sparkles and confetti after that). |
+| 🐉 **Dragon Sky** | Fly a friendly green dragon over an endless land of hills, castles and floating lanterns. Breathe fire to light paper lanterns (they glow and float away), campfires and castle braziers; everything goes out again after a while so there is always more to light. |
 
 ### Dino World buttons
 
@@ -82,6 +83,19 @@ Toddlers can't leave a game by accident: only the two-button hold or the keyboar
 | Left | Flashing beacon on/off |
 | Top | Lift / lower the bucket arm |
 | L / R | Bounce |
+
+### Dragon Sky buttons
+
+| Button | Action |
+|---|---|
+| Stick left / right | Turn |
+| Stick up / down | Fly higher / lower |
+| ZR / ZL (hold) | Fly fast / slow |
+| Bottom (hold) | Breathe fire |
+| Right | ROAR |
+| Left | Loop-the-loop |
+| Top | Big flap (shoots upward) |
+| L / R | Barrel roll left / right |
 
 The free-roam games show a small controller map in the corner for grown-ups (`showGuides` in config).
 

@@ -24,6 +24,7 @@ app/core/shell.js        menu carousel + game loop + parent exit (hold SELECT+ST
 app/games/*.js           one file per game, each calls Games.register({ id, name, emoji, color, create(api) })
 app/assets/dinos/        Quaternius CC0 dinos: .glb (source) + .glb.js (packed; what the app loads)
 app/assets/bulldozer/    "Wheel loader" model for Sand Digger (textures embedded in the .glb)
+app/assets/dragon/       rigged dragon for Dragon Sky (from "Dragon Rigged and Game Ready" Unity package FBX)
 app/vendor/three.bundle.js  Three.js + addons as window.THREE (rebuild: edit tools/three-entry.js, `npm run vendor`)
 tools/pack-assets.js     .glb -> .glb.js (`npm run assets`)
 tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
@@ -40,9 +41,11 @@ tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
 - **No voices during play** (menu may speak game names only). No praise lines.
 - Buttons are read by **position** (standard mapping): 0 bottom, 1 right, 2 left, 3 top, 4 L, 5 R, 6 ZL/L2, 7 ZR/R2,
   8 select, 9 start, 12–15 D-pad. Colours by position: `U.BTN_COLORS`. Never exit a game except via SELECT+START hold / Esc.
-- Free-roam games (Dino World, Tractor Farm, Sand Digger) keep a fixed or chase camera: toddlers can't control a camera.
+- Free-roam games (Dino World, Tractor Farm, Sand Digger, Dragon Sky) keep a fixed or chase camera: toddlers can't control a camera.
 
 ## Rules (rendering) learned the hard way
+- Textures embedded in a .glb load via `blob:` URLs: the CSP in index.html must keep `img-src` and `connect-src` allowing
+  `blob: data:`, or textured models silently render plain white. Test pages need the same CSP to catch this.
 - Glossy clearcoat on **big flat surfaces** mirrors the studio environment and blooms white: use satin (`roughness ~0.5`).
 - Bloom threshold ~1.15–1.3: only emissive things (stars, sparkles, lights) should glow.
 - Skinned meshes: measure from skinned vertices (`applyBoneTransform`), not bounding boxes.
@@ -52,10 +55,17 @@ tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
 - Wheel loader .glb: bucket + link rod come out detached (bone-parented in Blender, no skins used). `buildLoader()` in
   sand-digger.js re-hinges the bucket at the arm tip, hides the rod, recolours the white mirror shaders. three.js strips
   dots from node names (`Plane.016` -> `Plane016`). `__stage.loader` exposes the rig.
+- Dragon .glb was converted in Electron with three's FBXLoader + GLTFExporter: colour map (originally near-black) recoloured
+  to flat cartoon greens with no pale highlights (a luminance ramp up to near-white made it look white in-game), vertices merged
+  (FBX imports are unindexed: 9.4 MB -> 3.7 MB), and only one seamless hover loop (source Fly clip 1.43s-3.87s, which
+  is take-off/hover/landing) kept as "Fly". The clip hovers upright, the game pitches it forward. Mouth = `upper_lip`/`lower_lip` bones.
+- Additive sprites wash out against a bright sky; fire uses normal blending. Anything the chase camera can fly into
+  (fire, lanterns, clouds) must fade/hide near the lens or it fills the screen white with bloom.
+  A breath stream seen from straight behind collapses into a ball: Dragon Sky swings the camera to a 3/4 view while breathing.
 - Infinite worlds: ground follows the player with texture offset; props wrap around a square (`scatter`, area ~130) hidden by fog (~36–66).
 
 ## Games (menu order)
-button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger
+button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger · dragon-sky
 
 ## Ideas not done yet
 - Let the child choose their dino (every species works as the player: `Kit3D.makeDinoModel(S, 'triceratops')`).
