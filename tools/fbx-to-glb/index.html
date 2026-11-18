@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FBX → GLB converter (Tiny Arcade)</title>
+<style>
+  body { font: 16px -apple-system, system-ui, sans-serif; background: #1b1440; color: #fff; display: grid; place-items: center; min-height: 100vh; margin: 0; }
+  #drop { border: 3px dashed #8e7dff; border-radius: 20px; padding: 60px 80px; text-align: center; max-width: 560px; }
+  #drop.over { background: #2b2066; }
+  li { margin: 6px 0; } a { color: #7dffb0; } small { color: #b9b0ff; }
+</style>
+</head>
+<body>
+<div id="drop">
+  <h2>Drop .fbx files here</h2>
+  <p><small>Converts animated FBX models (e.g. Quaternius packs) to .glb for app/assets/.<br>
+  Fixes too-dark FBX colours, merges colour patches into one group per material,<br>
+  and renames clips like "Armature|TRex_Walk" to "Walk". Open this page in Chrome.</small></p>
+  <p><input type="file" id="pick" accept=".fbx" multiple></p>
+  <ul id="out"></ul>
+</div>
+<script src="fbxtools.js"></script>
+<script>
+const drop = document.getElementById('drop'), out = document.getElementById('out');
+['dragover', 'dragenter'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(e => drop.addEventListener(e, () => drop.classList.remove('over')));
+drop.addEventListener('drop', ev => { ev.preventDefault(); convert(ev.dataTransfer.files); });
+document.getElementById('pick').addEventListener('change', ev => convert(ev.target.files));
+async function convert(files) {
+  for (const file of files) {
+    if (!/\.fbx$/i.test(file.name)) continue;
+    const li = document.createElement('li'); li.textContent = 'Converting ' + file.name + '…'; out.appendChild(li);
+    try {
+      const o = new FBXLoader().parse(await file.arrayBuffer(), '');
+      o.traverse(m => {
+        if (!m.isMesh) return;
+        const mats = [].concat(m.material).map(old => new THREE.MeshStandardMaterial({ name: old.name, color: old.color.clone().convertLinearToSRGB(), roughness: 0.6, metalness: 0, flatShading: true }));
+        m.material = mats.length === 1 ? mats[0] : mats;
+        const g = m.geometry;
+        if (g.groups.length > 1) {
+          const src = g.index ? g.index.array : null, per = mats.map(() => []);
+          for (const gr of g.groups) for (let i = gr.start; i < gr.start + gr.count; i++) per[gr.materialIndex].push(src ? src[i] : i);
+          const idx = []; g.clearGroups(); let start = 0;
+          per.forEach((list, mi) => { if (!list.length) return; idx.push(...list); g.addGroup(start, list.length, mi); start += list.length; });
+          g.setIndex(idx);
+        }
+      });
+      o.animations.forEach(a => { a.name = a.name.split('_').pop(); });
+      const buf = await new GLTFExporter().parseAsync(o, { binary: true, animations: o.animations });
+      const name = file.name.replace(/\.fbx$/i, '').toLowerCase() + '.glb';
+      const url = URL.createObjectURL(new Blob([buf], { type: 'model/gltf-binary' }));
+      li.innerHTML = `<a href="${url}" download="${name}">${name}</a> (${Math.round(buf.byteLength / 1024)} KB, clips: ${o.animations.map(a => a.name).join(', ') || 'none'})`;
+    } catch (e) { li.textContent = file.name + ': ' + e.message; }
+  }
+}
+</script>
+</body>
+</html>

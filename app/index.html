@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiny Arcade</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="parent-hint">Grown-ups: hold SELECT + START (or press Esc) for the menu</div>
+<div id="back-meter"><div></div></div>
+
+<script src="config.js"></script>
+<script src="core/util.js"></script>
+<script src="core/input.js"></script>
+<script src="core/audio.js"></script>
+<script src="core/fx.js"></script>
+<script src="core/registry.js"></script>
+<script src="vendor/three.bundle.js"></script>
+<script src="core/three-kit.js"></script>
+
+<!-- 3D models (CC0 dinosaurs by Quaternius), packed by `npm run assets` -->
+<script src="assets/dinos/trex.glb.js"></script>
+<script src="assets/dinos/velociraptor.glb.js"></script>
+<script src="assets/dinos/triceratops.glb.js"></script>
+<script src="assets/dinos/stegosaurus.glb.js"></script>
+<script src="assets/dinos/apatosaurus.glb.js"></script>
+<script src="assets/dinos/parasaurolophus.glb.js"></script>
+<script src="core/assets.js"></script>
+
+<!-- games appear in the menu in this order -->
+<script src="games/button-party.js"></script>
+<script src="games/drum-band.js"></script>
+<script src="games/fishy-swim.js"></script>
+<script src="games/balloon-pop.js"></script>
+<script src="games/dino-world.js"></script>
+<script src="games/tractor.js"></script>
+
+<script src="core/shell.js"></script>
+</body>
+</html>

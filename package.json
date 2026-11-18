@@ -1,0 +1,34 @@
+{
+  "name": "tiny-arcade",
+  "productName": "Tiny Arcade",
+  "version": "0.4.0",
+  "description": "Gentle controller games for little players (made for 8BitDo / any gamepad)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --windowed",
+    "dist": "electron-builder --mac",
+    "vendor": "esbuild tools/three-entry.js --bundle --minify --format=iife --outfile=app/vendor/three.bundle.js",
+    "assets": "node tools/pack-assets.js"
+  },
+  "devDependencies": {
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0",
+    "three": "^0.187.0",
+    "esbuild": "^0.28.2"
+  },
+  "build": {
+    "appId": "com.alfonso.tinyarcade",
+    "productName": "Tiny Arcade",
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "!app/assets/**/*.glb"
+    ],
+    "mac": {
+      "category": "public.app-category.kids-games",
+      "target": "dmg"
+    }
+  }
+}
