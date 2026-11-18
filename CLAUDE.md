@@ -79,7 +79,6 @@ Menu icon: set `S.hero` (Object3D, list, or function that may pose things; only 
 button-party · drum-band · fishy-swim · balloon-pop · dino-world · tractor · sand-digger · dragon-sky
 
 ## Ideas not done yet
-- Let the child choose their dino (every species works as the player: `Kit3D.makeDinoModel(S, 'triceratops')`).
 - Big cartoon eyes attached to the dino `Head` bone.
 - Fishy Swim still has its own renderer setup (predates Kit3D); could be ported to Kit3D.
 

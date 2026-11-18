@@ -7,6 +7,7 @@
 //   L / R         : wave left / right hand
 //   ZL / ZR       : lift left / right leg (and STOMP)
 //
+// First, choose your dino: D-pad / stick left-right (or L/R) spins the line-up, any face button picks.
 // Walk into a spotted egg to hatch a baby dino; babies follow you and copy what you do.
 Games.register({
   id: 'dino-world', name: 'Dino World', emoji: '🦖', color: '#36d27a',
@@ -113,10 +114,19 @@ Games.register({
     }, { clamp: true, srgb: false });
     const prints = Kit3D.decals(S, printTex, { count: 120, size: [0.9, 1.0], opacity: 0.28 });
 
-    // ---------- the dino ----------
-    const dino = Kit3D.makeDinoModel(S, 'trex');
-    scene.add(dino.root);
-    S.hero = dino.root;   // what the menu icon shows (tools/make-icons.js)
+    // ---------- choose your dino: a turntable line-up, the one in front is yours ----------
+    const SPECIES = ['trex', 'triceratops', 'stegosaurus', 'velociraptor', 'parasaurolophus', 'apatosaurus'];
+    const N = SPECIES.length, STEP = Math.PI * 2 / N, RING = 6;
+    const game = this;                                   // remembers the last pick for next time
+    let selC = game.pick || 0, sel = selC, ringA = -selC * STEP, picking = true, stickHeld = false, settleT = 0.6, settled = false, idleT = 0, camBlend = 0;
+    const choices = SPECIES.map(k => { const m = Kit3D.makeDinoModel(S, k); scene.add(m.root); return m; });
+    let dino = choices[sel];
+    S.hero = () => [dino.root];   // what the menu icon shows (tools/make-icons.js)
+    const CAM_PICK = new T.Vector3(0, 3.6, 10.5), LOOK_PICK = new T.Vector3(0, 1.7, -1.5);
+    const spot = new T.Mesh(S.track(new T.RingGeometry(2.0, 2.45, 48)), S.track(new T.MeshBasicMaterial({ color: '#fff2a8', transparent: true, opacity: 0.75, depthWrite: false })));
+    spot.rotation.x = -Math.PI / 2; spot.position.y = 0.04; scene.add(spot);
+    // keep the line-up area clear of trees and rocks
+    world.list.forEach(o => { if (Math.abs(o.position.x) < RING + 4 && o.position.z > -2 * RING - 3 && o.position.z < 13) o.position.x += (o.position.x < 0 ? -1 : 1) * (2 * RING + 8); });   // between the camera and the back of the ring
     const pos = new T.Vector3(), vel = new T.Vector3();
     let yaw = 0, lastStep = 0;
     const forward = () => new T.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
@@ -143,13 +153,13 @@ Games.register({
     const copy = (name) => babies.forEach((b, i) => setTimeout(() => b.rig.do(name), 120 + i * 110));
 
     // action effects
-    dino.onLand = () => {
+    const onLand = () => {
       sfx.stomp(); S.shake(0.18); input.rumble(0.5, 120);
       S.ring(pos.clone().setY(0.05), '#ffe6a8', 4, 0.5, 0.7);
       S.sparkle(pos.clone().setY(0.2), '#d9c49a', 30, 4, { gravity: 6, glow: 1.2, spread: 0.8 });
       world.nudge(pos.x, pos.z, 4, 0.8);
     };
-    dino.onStomp = (side) => {
+    const onStomp = (side) => {
       sfx.stomp(); S.shake(0.22); input.rumble(0.6, 140);
       const f = forward(), right = new T.Vector3(-f.z, 0, f.x);
       const p = pos.clone().addScaledVector(right, -side * 0.62).addScaledVector(f, 0.4).setY(0.05);
@@ -158,7 +168,7 @@ Games.register({
       prints.place(p.x, p.z, yaw);
       world.nudge(p.x, p.z, 5, 0.9);
     };
-    dino.onSneeze = () => {
+    const onSneeze = () => {
       const hp = headPos();
       S.sparkle(hp, '#e8fff0', 50, 7, { gravity: 1, life: 0.9, glow: 1.5 });
       S.sparkle(hp, '#b8ffcb', 20, 9, { gravity: 0, life: 0.6 });
@@ -187,14 +197,69 @@ Games.register({
       }
     }
 
+    function animateSmoke(dt) {
+      smoke.forEach(s => { const d = s.userData; d.t = (d.t + dt * 0.05) % 1; s.position.copy(d.base).add(new T.Vector3(d.t * 12, d.t * 26, 0)); s.scale.setScalar(3 + d.t * 9); s.material.opacity = 0.5 * (1 - d.t); });
+    }
+    function choose(d) {
+      selC += d; sel = ((selC % N) + N) % N; settleT = 0.35; settled = false;
+      sfx.whoosh(); sfx.tick(); input.rumble(0.2, 50);
+    }
+    function pick() {
+      picking = false; game.pick = sel; dino = choices[sel];
+      Object.assign(dino, { onLand, onStomp, onSneeze });
+      pos.set(0, 0, 0); yaw = 0;                       // the chosen dino stays put, facing us
+      choices.forEach(c => { if (c !== dino) { c.leaving = 1; S.sparkle(c.root.position.clone().setY(1.2), U.pick(U.RAINBOW), 24, 4, { gravity: 3, glow: 1.2 }); } });
+      dino.do('roar'); sfx.roar(); input.rumble(0.8, 500); S.shake(0.25);
+      S.ring(new T.Vector3(0, 0.06, 0), '#fff1b8', 8, 0.8, 0.6);
+      api.celebrate();
+    }
+    function updatePicker(dt) {
+      for (const b of input.pressed) {
+        if (b === 14 || b === 4 || b === 6) choose(-1);
+        else if (b === 15 || b === 5 || b === 7) choose(1);
+        else if (b === 12 || b === 13) { choices[sel].do('happy'); sfx.boing(); }
+        else if ([0, 1, 2, 3, 9].includes(b)) { pick(); return; }
+      }
+      // the stick: one step per push (the D-pad already counted above)
+      if (input.down.has(14) || input.down.has(15)) stickHeld = true;
+      else if (Math.abs(input.x) > 0.6) { if (!stickHeld) { choose(input.x > 0 ? 1 : -1); stickHeld = true; } }
+      else if (Math.abs(input.x) < 0.3) stickHeld = false;
+
+      ringA = U.lerp(ringA, -selC * STEP, Math.min(1, dt * 6));
+      choices.forEach((c, i) => {
+        const a = ringA + i * STEP, x = Math.sin(a) * RING, z = -RING + Math.cos(a) * RING;
+        c.root.position.set(x, 0, z);
+        c.root.rotation.y = Math.atan2(CAM_PICK.x - x, CAM_PICK.z - z);   // everyone looks at the child
+        c.root.scale.setScalar(0.72 + 0.38 * Math.pow(Math.max(0, Math.cos(a)), 3));
+        c.update(dt, 0);
+      });
+      // the one that lands in front says hello (and again every few seconds)
+      settleT -= dt; idleT -= dt;
+      if (!settled && settleT <= 0) { settled = true; idleT = 3.5; choices[sel].do('happy'); sfx.note(5 + sel * 2); sfx.note(9 + sel * 2, { delay: 0.12 }); }
+      if (settled && idleT <= 0) { idleT = 3.5; choices[sel].do(U.pick(['happy', 'waveL', 'waveR'])); sfx.chime(); }
+      spot.material.opacity = 0.55 + Math.sin(t * 4) * 0.2;
+      camera.position.lerp(CAM_PICK, Math.min(1, dt * 3)); camera.lookAt(LOOK_PICK);
+      skyDome.position.copy(camera.position);
+      animateSmoke(dt);
+    }
+
     let t = 0, danceSpark = 0, bumpCool = 0;
-    camera.position.set(0, 7, 12.5);
+    camera.position.copy(CAM_PICK);
 
     return {
       resize: S.resize,
       update(dt) {
         t += dt;
+        if (picking) { updatePicker(dt); S.update(dt); return; }
         for (const b of input.pressed) doAction(b);
+        // after picking: the others pop away, the spotlight fades, the chosen one grows back to full size
+        choices.forEach(c => {
+          if (!(c.leaving > 0)) return;
+          c.leaving -= dt * 3; c.root.scale.setScalar(Math.max(0.001, c.leaving * 0.8)); c.root.position.y += dt * 3; c.update(dt, 0);
+          if (c.leaving <= 0) scene.remove(c.root);
+        });
+        if (spot.visible) { spot.material.opacity -= dt * 1.5; spot.scale.multiplyScalar(1 + dt); if (spot.material.opacity <= 0) spot.visible = false; }
+        dino.root.scale.setScalar(U.lerp(dino.root.scale.x, 1, Math.min(1, dt * 4)));
 
         // movement: camera-relative (stick up = walk away from the camera)
         const sp = 7.5 * CONFIG.stickSpeed;
@@ -255,18 +320,32 @@ Games.register({
         ground.follow(pos.x, pos.z);
         sun.follow(pos.x, pos.z);
         horizon.position.set(pos.x, 0, pos.z);
-        smoke.forEach(s => { const d = s.userData; d.t = (d.t + dt * 0.05) % 1; s.position.copy(d.base).add(new T.Vector3(d.t * 12, d.t * 26, 0)); s.scale.setScalar(3 + d.t * 9); s.material.opacity = 0.5 * (1 - d.t); });
+        animateSmoke(dt);
 
         // camera follows from a fixed angle
         const camTarget = new T.Vector3(pos.x, 7, pos.z + 12.5);
         camera.position.lerp(camTarget, Math.min(1, dt * 3));
-        camera.lookAt(pos.x, 2 + dino.inner.position.y * 0.3, pos.z);
+        camBlend = Math.min(1, camBlend + dt);   // glide from the line-up view into the play view
+        const look = new T.Vector3(pos.x, 2 + dino.inner.position.y * 0.3, pos.z);
+        camera.lookAt(camBlend < 1 ? LOOK_PICK.clone().lerp(look, U.ease(camBlend)) : look);
         skyDome.position.copy(camera.position);
         S.update(dt);
       },
       draw(ctx) {
         S.render();
         ctx.clearRect(0, 0, api.w, api.h);
+        if (picking) {   // no reading: big arrows to spin the line-up, and the bottom button to pick
+          const w = api.w, h = api.h, p = Math.sin(t * 4);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 12;
+          ctx.font = `${Math.round(h * 0.11)}px system-ui`;
+          ctx.fillText('◀', w * 0.07 - p * 8, h * 0.5); ctx.fillText('▶', w * 0.93 + p * 8, h * 0.5);
+          const r = h * 0.055 * (1 + 0.08 * Math.abs(p));
+          ctx.fillStyle = U.BTN_COLORS[0]; ctx.beginPath(); ctx.arc(w / 2, h * 0.88, r, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0; ctx.lineWidth = r * 0.12; ctx.strokeStyle = '#fff'; ctx.stroke();
+          U.emoji(ctx, '👍', w / 2, h * 0.88, r * 1.1);
+          return;
+        }
         if (babies.length) {
           ctx.font = `800 ${Math.max(26, api.h * 0.045)}px ui-rounded, system-ui, sans-serif`;
           ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
