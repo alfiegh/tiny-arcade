@@ -3,6 +3,9 @@ const { app, BrowserWindow, Menu, ipcMain, powerSaveBlocker } = require('electro
 const path = require('path');
 
 const windowed = process.argv.includes('--windowed');
+// App icon: build/icon.png (1024px). electron-builder bakes it into the packaged .app; when running with `npm start`
+// macOS would show Electron's own icon, so set it on the Dock (and on the window for Windows/Linux).
+const ICON = path.join(__dirname, 'build', 'icon.png');
 let win;
 
 function createWindow() {
@@ -12,6 +15,7 @@ function createWindow() {
     fullscreen: !windowed,
     backgroundColor: '#1b1440',
     title: 'Tiny Arcade',
+    icon: ICON,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -35,6 +39,7 @@ ipcMain.on('quit', () => app.quit());
 ipcMain.on('toggle-fullscreen', () => win && win.setFullScreen(!win.isFullScreen()));
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin' && !app.isPackaged) app.dock.setIcon(ICON);   // dev runs: our icon instead of Electron's
   powerSaveBlocker.start('prevent-display-sleep'); // no screen dimming mid-game
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

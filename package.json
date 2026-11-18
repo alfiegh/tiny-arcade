@@ -10,7 +10,8 @@
     "dist": "electron-builder --mac",
     "vendor": "esbuild tools/three-entry.js --bundle --minify --format=iife --outfile=app/vendor/three.bundle.js",
     "assets": "node tools/pack-assets.js",
-    "icons": "electron tools/make-icons.js"
+    "icons": "electron tools/make-icons.js",
+    "postinstall": "node tools/dev-app-name.js"
   },
   "devDependencies": {
     "electron": "^45.3.4",
@@ -27,6 +28,10 @@
       "app/**/*",
       "!app/assets/**/*.glb"
     ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "icon": "build/icon.png",
     "mac": {
       "category": "public.app-category.kids-games",
       "target": "dmg"

@@ -34,6 +34,8 @@ app/assets/medieval/     Quaternius Modular Medieval Buildings (towers, walls, W
                          use: Kit3D.prop(S, 'nature/nature', 'Tree1', { height, colors: { Celing: '#3d7bf0' } })
 app/vendor/three.bundle.js  Three.js + addons as window.THREE (rebuild: edit tools/three-entry.js, `npm run vendor`)
 tools/pack-assets.js     .glb -> .glb.js (`npm run assets`)
+build/icon.png           app icon (1024px): electron-builder + Dock icon in dev (main.js)
+tools/dev-app-name.js    postinstall: renames the dev Electron.app to productName (Dock tooltip / menu bar)
 tools/make-icons.js      menu icons: renders each game's S.hero to app/assets/icons/<id>.png (`npm run icons [id]`)
 tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
 ```
