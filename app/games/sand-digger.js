@@ -101,6 +101,7 @@ Games.register({
     const L = buildLoader();
     scene.add(L.root);
     S.loader = L;   // for DevTools poking: __stage.loader
+    S.hero = L.root;   // what the menu icon shows (tools/make-icons.js)
 
     function buildLoader() {
       const asset = Assets.get('bulldozer/bulldozer');

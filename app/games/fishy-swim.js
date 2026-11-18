@@ -335,6 +335,7 @@ Games.register({
 
     const hero = makeFish({ body: '#e04400', band: '#ffffff', belly: '#f59040', fin: '#e8600c', bands: 2, size: 1.15 });
     scene.add(hero);
+    window.__stage = { T, renderer, scene, camera, hero };   // DevTools + the menu icon (tools/make-icons.js)
     const FRIENDS = [
       { body: '#2f6bff', band: '#111', belly: '#7fb0ff', fin: '#ffd23f', bands: 0, size: 0.84 },
       { body: '#ffd23f', band: '#fff', belly: '#fff3b0', fin: '#ffb703', bands: 0, size: 0.72, round: 1.35 },

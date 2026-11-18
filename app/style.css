@@ -24,6 +24,7 @@ canvas { display: block; width: 100vw; height: 100vh; }
 #loader .ld-tile { width: 26vmin; height: 26vmin; border-radius: 22%; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2vmin 5vmin rgba(0,0,0,.35); border: 1vmin solid #fff; will-change: transform; animation: ld-bounce .9s ease-in-out infinite; }
 #loader .ld-emoji { font-size: 15vmin; line-height: 1; }
+#loader .ld-icon { width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 1vmin 1vmin rgba(0,0,0,.3)); }
 #loader .ld-ring { position: absolute; width: 52vmin; height: 52vmin; will-change: transform; animation: ld-spin 1.6s linear infinite; }
 #loader .ld-ring i { position: absolute; left: 50%; top: 50%; width: 4.6vmin; height: 4.6vmin; margin: -2.3vmin; border-radius: 50%; }
 #loader .ld-ring i:nth-child(1) { background: #ff4d6d; transform: rotate(0deg) translateY(-24vmin) scale(0.55); }

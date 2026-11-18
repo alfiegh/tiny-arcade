@@ -9,7 +9,8 @@
     "dev": "electron . --windowed",
     "dist": "electron-builder --mac",
     "vendor": "esbuild tools/three-entry.js --bundle --minify --format=iife --outfile=app/vendor/three.bundle.js",
-    "assets": "node tools/pack-assets.js"
+    "assets": "node tools/pack-assets.js",
+    "icons": "electron tools/make-icons.js"
   },
   "devDependencies": {
     "electron": "^45.3.4",

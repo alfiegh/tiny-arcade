@@ -137,6 +137,7 @@ Games.register({
 
     // ---------- the tractor (faces +Z) ----------
     const tractor = new T.Group(); scene.add(tractor);
+    S.hero = tractor;   // what the menu icon shows (tools/make-icons.js)
     const chassis = new T.Group(); tractor.add(chassis);
     // satin paint: glossy clearcoat on big flat panels mirrors the bright studio-light environment and blooms
     const paint = mat('#e63946', { roughness: 0.5, metalness: 0.05, envMapIntensity: 0.6 });

@@ -30,6 +30,7 @@ app/assets/medieval/     Quaternius Modular Medieval Buildings (towers, walls, W
                          use: Kit3D.prop(S, 'nature/nature', 'Tree1', { height, colors: { Celing: '#3d7bf0' } })
 app/vendor/three.bundle.js  Three.js + addons as window.THREE (rebuild: edit tools/three-entry.js, `npm run vendor`)
 tools/pack-assets.js     .glb -> .glb.js (`npm run assets`)
+tools/make-icons.js      menu icons: renders each game's S.hero to app/assets/icons/<id>.png (`npm run icons [id]`)
 tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
 ```
 
@@ -38,6 +39,8 @@ tools/fbx-to-glb/        drag-and-drop FBX->GLB converter page
 3D games: `const S = Kit3D.stage(api, opts)`; in `update` end with `S.update(dt)`; in `draw` call `S.render()` then
 `ctx.clearRect(...)` and draw the 2D HUD; `resize: S.resize`; `destroy` must call `S.destroy()` (and stop `Sfx.engine()` etc.).
 3D renders to its own canvas (`.gl-layer`) under the 2D `#stage` canvas.
+Menu icon: set `S.hero` (Object3D, list, or function that may pose things; only the icon tool calls it) and re-run
+`npm run icons <id>` after changing a hero's look. Fishy Swim sets `window.__stage = { T, renderer, scene, camera, hero }`.
 
 ## Rules (product)
 - Age 3: no losing, no timers, no reading needed, generous targets/assists, every button does *something*.

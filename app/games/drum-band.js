@@ -78,6 +78,8 @@ Games.register({
     riserRim.rotation.x = Math.PI / 2; riserRim.position.set(0, 0.5, -3.4); scene.add(riserRim);
     const dino = Kit3D.makeDinoModel(S, 'trex', { height: 3.5 });
     dino.root.position.set(0, 0.5, -3.4); scene.add(dino.root);
+    // menu icon (tools/make-icons.js, hidden window only): gather three drums round the dino
+    S.hero = () => { dino.root.rotation.set(0, 0, 0); dino.root.children.forEach(c => { c.rotation.y = 0; }); [[0, -1.1], [-2.1, -2.0], [2.1, -2.0]].forEach(([x, z], i) => DRUMS[i].g.position.set(x, 0, z)); return [dino.root, ...DRUMS.slice(0, 3).map(d => d.g)]; };
 
     // ---------- drums ----------
     const CENTER = new T.Vector3(0, 0, 1.7), SPREAD = 2.6;

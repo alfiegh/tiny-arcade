@@ -10,7 +10,7 @@
 // Nothing is destroyed and nothing is lost: lit things go out again after a while so there is always more to light.
 // Model: app/assets/dragon/dragon.glb (rigged; one seamless "Fly" loop, faces +Z, hovers upright in the clip).
 Games.register({
-  id: 'dragon-sky', name: 'Dragon Sky', emoji: '🐉', color: '#3fbf6a',
+  id: 'dragon-sky', name: 'Dragon Sky', emoji: '🐉', color: '#7b5cff',
   create(api) {
     const { input, sfx } = api;
     const S = Kit3D.stage(api, { fog: ['#cfeaff', 40, 90], bloom: [0.6, 0.6, 1.2], exposure: 1.0, fov: 55, envIntensity: 0.6 });
@@ -122,6 +122,7 @@ Games.register({
     const D = makeDragon();
     scene.add(D.root);
     S.dragon = D;   // for DevTools poking: __stage.dragon
+    S.hero = D.root;   // what the menu icon shows (tools/make-icons.js)
 
     function makeDragon() {
       const asset = Assets.get('dragon/dragon');

@@ -65,6 +65,7 @@ Games.register({
 
     // ---------- buddy ----------
     const buddy = new T.Group();
+    S.hero = buddy;   // what the menu icon shows (tools/make-icons.js)
     const bodyM = mat('#ffd23f', { physical: true, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.15 });
     const bodyMesh = mesh(geo.sphere, bodyM); buddy.add(bodyMesh);
     const face = new T.Group(); buddy.add(face);

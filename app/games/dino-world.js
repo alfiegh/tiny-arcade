@@ -116,6 +116,7 @@ Games.register({
     // ---------- the dino ----------
     const dino = Kit3D.makeDinoModel(S, 'trex');
     scene.add(dino.root);
+    S.hero = dino.root;   // what the menu icon shows (tools/make-icons.js)
     const pos = new T.Vector3(), vel = new T.Vector3();
     let yaw = 0, lastStep = 0;
     const forward = () => new T.Vector3(Math.sin(yaw), 0, Math.cos(yaw));

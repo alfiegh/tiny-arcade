@@ -30,12 +30,18 @@
   const loaderEl = document.getElementById('loader');
   let loadFrames = 0, loaderHideIn = 0;
   function showLoader(game) {
-    loaderEl.querySelector('.ld-emoji').textContent = game.emoji;
+    const em = loaderEl.querySelector('.ld-emoji'), img = loaderEl.querySelector('.ld-icon');
+    em.textContent = ''; img.style.display = 'block';
+    img.onerror = () => { img.style.display = 'none'; em.textContent = game.emoji; };   // no icon file: emoji
+    img.src = `assets/icons/${game.id}.png`;
     loaderEl.querySelector('.ld-tile').style.background = game.color;
     loaderEl.classList.add('on'); loadFrames = 0;
   }
   let assetsReady = typeof Assets === 'undefined';
   if (!assetsReady) Assets.ready.then(() => { assetsReady = true; });
+  // menu icons: 3D renders of each game's hero (app/assets/icons/<id>.png, made by `npm run icons`); emoji until loaded / if missing
+  const icons = {};
+  Games.list.forEach(g => { const im = new Image(); im.onload = () => { icons[g.id] = im; }; im.src = `assets/icons/${g.id}.png`; });
   const bubbles = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), r: U.rand(10, 46), s: U.rand(0.02, 0.06), c: U.pick(U.RAINBOW) }));
 
   function startGame(i) {
@@ -112,7 +118,15 @@
       U.roundRect(ctx, x - s / 2, y - s / 2, s, s, s * 0.18); ctx.fill();
       ctx.shadowColor = 'transparent';
       if (focus > 0.5) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke(); }
-      U.emoji(ctx, game.emoji, x, y - s * 0.06, s * 0.5, Math.sin(t * 3 + i) * 0.08 * focus, 0.45 + 0.55 * focus);
+      const icon = icons[game.id];
+      if (icon) {   // the 3D hero, bobbing gently, with a soft shadow so it sits on the tile
+        const is = s * 0.84, bob = Math.sin(t * 3 + i) * s * 0.015 * focus;
+        ctx.save();
+        ctx.translate(x, y - s * 0.07 + bob); ctx.rotate(Math.sin(t * 2 + i) * 0.03 * focus);
+        ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = s * 0.05; ctx.shadowOffsetY = s * 0.03;
+        ctx.drawImage(icon, -is / 2, -is / 2, is, is);
+        ctx.restore();
+      } else U.emoji(ctx, game.emoji, x, y - s * 0.06, s * 0.5, Math.sin(t * 3 + i) * 0.08 * focus, 0.45 + 0.55 * focus);
       ctx.fillStyle = '#fff';
       ctx.font = `800 ${s * 0.11}px ui-rounded, "SF Pro Rounded", system-ui, sans-serif`;
       ctx.fillText(game.name, x, y + s * 0.34);

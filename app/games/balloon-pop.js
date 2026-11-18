@@ -59,6 +59,13 @@ Games.register({
     halo.scale.setScalar(3); wand.add(halo);
     const wandLight = new T.PointLight('#ffd76a', 3, 8, 1.6); wand.add(wandLight);
     scene.add(wand);
+    // menu icon (tools/make-icons.js, hidden window only): a bunch of three balloons with the star in front
+    S.hero = () => {
+      const bs = balloons.slice(0, 3);
+      bs.forEach((b, i) => { b.g.position.set([-1.2, 1.2, 0][i], [0, 0.4, 1.5][i], [0, 0, -0.5][i]); b.g.rotation.set(0, 0, [0.25, -0.25, 0][i]); b.g.scale.setScalar(1); b.g.children.forEach(c => { if (c.isLine) c.visible = false; }); });
+      wand.position.set(1.6, -1.6, 1.2); wand.rotation.set(0, 0, -0.2); wand.scale.setScalar(1.3);
+      return [wand, ...bs.map(b => b.g)];
+    };
     const wp = new T.Vector3(0, 2, 1), wv = new T.Vector3();
     let zap = 0;
 

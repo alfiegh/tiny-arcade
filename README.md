@@ -193,3 +193,6 @@ Games.register({
 ```
 
 2. Add `<script src="games/my-game.js"></script>` to `app/index.html`, above `core/shell.js`.
+3. Menu icon: in `create`, set `S.hero = myHeroObject` (or a function returning a list of objects; it may pose them),
+   add the game to `VIEWS` in `tools/make-icons.js`, then run `npm run icons`. It renders the hero in 3D to
+   `app/assets/icons/my-game.png`; until then the menu shows the emoji.
