@@ -4,11 +4,12 @@
 //   ZR (hold)       : go forward                   ZL (hold) : reverse
 //   A (bottom)      : jump                          B (right) : beep-beep horn
 //   Y (left)        : lights on/off (turns the farm to sunset)
-//   X (top)         : raise / lower the front bucket
+//   X (top)         : raise / lower the front bucket (carrying a hay bale: tip it out)
 //   L / R           : left / right blinkers
 //
 // Cows, sheep and chickens hop and call out when you beep or drive close.
-// Hay bales and pumpkins get pushed around; trees, barns and windmills are solid.
+// Drive into a hay bale with the bucket down to scoop it up; X tips it out. Drop it on another bale to build a stack.
+// Pumpkins get pushed around; trees, rocks, barns and windmills are solid.
 Games.register({
   id: 'tractor', name: 'Tractor Farm', emoji: '🚜', color: '#e63946',
   create(api) {
@@ -58,7 +59,7 @@ Games.register({
     }
     const hayTex = S.canvasTex(128, (g, s) => { g.fillStyle = '#e8c35a'; g.fillRect(0, 0, s, s); for (let i = 0; i < 400; i++) { g.strokeStyle = `rgba(${U.randInt(150, 200)},${U.randInt(110, 150)},40,.5)`; g.beginPath(); const x = U.rand(0, s), y = U.rand(0, s); g.moveTo(x, y); g.lineTo(x + U.rand(-10, 10), y + U.rand(-3, 3)); g.stroke(); } });
     const hayM = S.track(new T.MeshStandardMaterial({ map: hayTex, roughness: 1 }));
-    function hay() { const g = new T.Group(); const h = mesh(geo.cyl, hayM); h.scale.set(1, 1.3, 1); h.rotation.z = Math.PI / 2; h.position.y = 1; g.add(h); return g; }
+    function hay() { const g = new T.Group(); g.userData.hay = true; const h = mesh(geo.cyl, hayM); h.scale.set(1, 1.3, 1); h.rotation.z = Math.PI / 2; h.position.y = 1; g.add(h); return g; }
     const pumpM = mat('#ff8c1a', { roughness: 0.5 });
     function pumpkin() { const g = new T.Group(); const p = mesh(geo.sphere, pumpM); p.scale.set(0.6, 0.45, 0.6); p.position.y = 0.42; g.add(p); const st = mesh(geo.cyl, mat('#3f7a2a')); st.scale.set(0.06, 0.25, 0.06); st.position.y = 0.92; g.add(st); g.scale.setScalar(U.rand(0.8, 1.4)); return g; }
     const flowerHead = mat('#ffd23f', { roughness: 0.6 }), flowerMid = mat('#6b3f1f');
@@ -237,9 +238,49 @@ Games.register({
         case 0: if (!air) { air = true; vy = 8.5; sfx.boing(); puff(2); } break;
         case 1: sfx.horn(); hornT = 0.6; S.ring(pos.clone().setY(0.1), '#ffe08a', 10, 0.8, 0.5); animalsReact(16, true); input.rumble(0.4, 300); break;
         case 2: lights = !lights; sfx.tick(); sfx.synth({ type: 'square', freq: lights ? 880 : 520, dur: 0.12, vol: 0.12, cutoff: 3000 }); break;
-        case 3: bucketUp = !bucketUp; sfx.servo(); break;
+        case 3: if (carry) dropBale(); else { bucketUp = !bucketUp; sfx.servo(); } break;
         case 4: blink = { side: blink.side === 1 ? 0 : 1, t: 5 }; break;
         case 5: blink = { side: blink.side === -1 ? 0 : -1, t: 5 }; break;
+      }
+    }
+
+    // ---------- hay bales: drive into one with the bucket down to scoop it up, X tips it out (onto another bale = stack) ----------
+    const BALE_H = 2, CARRY_POS = new T.Vector3(0, -0.37, 0.75);
+    let carry = null, tipT = 0;
+    const bales = () => world.list.filter(o => o.userData.hay);
+    function grabBale(o) {
+      const u = o.userData;
+      world.list.splice(world.list.indexOf(o), 1);                  // carried: no wrapping/pushing while in the bucket
+      bales().forEach(b => { if (b.userData.on === o) { b.userData.on = null; b.userData.fall = { vy: 0, vx: 0, vz: 0 }; } });   // bales on top tumble down
+      u.on = null; u.fall = null; u.wob = 0; o.scale.copy(u.base); o.children[0].rotation.x = 0;
+      bucket.attach(o); carry = o; u.grabT = 0;
+      const ry = Math.atan2(Math.sin(o.rotation.y), Math.cos(o.rotation.y));
+      u.from = { p: o.position.clone(), ry: ry > Math.PI / 2 ? ry - Math.PI : ry < -Math.PI / 2 ? ry + Math.PI : ry };   // a bale looks the same turned 180°
+      bucketUp = true; sfx.servo(); sfx.note(9, { delay: 0.05 }); input.rumble(0.35, 120);
+      S.sparkle(o.getWorldPosition(new T.Vector3()).setY(1.2), '#e8c35a', 16, 3, { gravity: 5, glow: 1.1 });
+    }
+    function dropBale() {
+      const o = carry, u = o.userData, f = fwd(), out = 0.8 + Math.max(0, speed) * 0.3;
+      carry = null; scene.attach(o); o.rotation.x = o.rotation.z = 0;
+      u.fall = { vy: 2.5, vx: f.x * out, vz: f.z * out };
+      world.list.push(o);
+      tipT = 1; bucketUp = false; sfx.whoosh(); sfx.servo();
+    }
+    function landBale(o, base, y) {
+      const u = o.userData;
+      o.position.y = y; u.fall = null; u.wob = 0.7;
+      S.shake(0.08); input.rumble(0.4, 100);
+      if (base) {   // neat stack on the bale below; every level plays a higher note, three high = party
+        u.on = base; o.position.x = base.position.x; o.position.z = base.position.z; o.rotation.y = base.rotation.y;
+        let level = 1; for (let b = base; b; b = b.userData.on) level++;
+        sfx.stomp(); sfx.note(3 + level * 2, { delay: 0.05 });
+        S.sparkle(o.position.clone().setY(y + 0.2), '#ffd166', 24, 4, { gravity: 4, glow: 1.2, spread: 1 });
+        const sp = S.toScreen(o.position.clone().setY(y + BALE_H + 0.8));
+        if (!sp.behind) api.fx.floatEmoji(sp.x, sp.y, level >= 3 ? '🎉' : '⭐', { size: 54, life: 1.3 });
+        if (level >= 3) { sfx.cheer(); api.fx.confetti(api.w, api.h); }
+      } else {
+        sfx.stomp(); S.ring(o.position.clone().setY(0.06), '#ffe6a8', 4, 0.5, 0.6);
+        S.sparkle(o.position.clone().setY(0.3), '#e8c35a', 20, 3, { gravity: 6, glow: 1.1, spread: 1 });
       }
     }
 
@@ -263,9 +304,21 @@ Games.register({
         const f = fwd();
         pos.addScaledVector(f, speed * dt);
 
+        // scoop up a hay bale that's right in front of a lowered bucket
+        if (!carry && bucketA < 0.35 && !air && speed > 0.3) {
+          const all = bales(), under = new Set(all.map(b => b.userData.on).filter(Boolean));
+          for (const o of all) {
+            if (o.userData.fall || o.position.y > 0.5 || under.has(o)) continue;   // never pull the bottom out of a stack
+            const rx = o.position.x - pos.x, rz = o.position.z - pos.z;
+            const along = rx * f.x + rz * f.z, side = Math.abs(rx * f.z - rz * f.x);
+            if (along > 1.5 && along < 3.8 && side < 1.7) { grabBale(o); break; }
+          }
+        }
+
         // collisions: solid props push the tractor; light props get pushed
         world.list.forEach(o => {
           const u = o.userData, k = u.kind;
+          if (u.hay && (u.fall || o.position.y > 0.5)) return;   // falling / stacked bales: the tractor drives under the top ones
           const dx = o.position.x - pos.x, dz = o.position.z - pos.z, d = Math.hypot(dx, dz), min = u.r + 1.6;
           if (d >= min || d < 0.001) return;
           const nx = dx / d, nz = dz / d, push = min - d;
@@ -293,7 +346,30 @@ Games.register({
 
         // bucket
         bucketA = U.lerp(bucketA, bucketUp ? 1 : 0, Math.min(1, dt * 3));
-        loader.rotation.x = -0.95 * bucketA; bucket.rotation.x = 0.95 * bucketA;
+        tipT = Math.max(0, tipT - dt * 1.6);
+        loader.rotation.x = -0.95 * bucketA; bucket.rotation.x = 0.95 * bucketA + Math.sin(tipT * Math.PI) * 0.9;   // tips forward to drop a bale
+        if (carry) {
+          const u = carry.userData; u.grabT = Math.min(1, u.grabT + dt * 4); const e = U.ease(u.grabT);
+          carry.position.lerpVectors(u.from.p, CARRY_POS, e); carry.rotation.set(0, U.lerp(u.from.ry, 0, e), 0);
+        }
+        bales().forEach(o => {
+          const u = o.userData;
+          if (u.fall) {
+            u.fall.vy -= 22 * dt; u.fall.vx *= Math.pow(0.3, dt); u.fall.vz *= Math.pow(0.3, dt);
+            o.position.x += u.fall.vx * dt; o.position.y += u.fall.vy * dt; o.position.z += u.fall.vz * dt;
+            if (u.fall.vy < 0) {   // land on top of a nearby stack (generous: hops up onto it even from a bit low), or the ground
+              const all = bales(), under = new Set(all.map(b => b.userData.on).filter(Boolean));
+              let base = null, best = 2.2;
+              for (const b of all) {
+                if (b === o || b.userData.fall || under.has(b)) continue;   // only the top bale of each stack
+                const d = Math.hypot(b.position.x - o.position.x, b.position.z - o.position.z);
+                if (d < best) { best = d; base = b; }
+              }
+              const floor = base ? base.position.y + BALE_H : 0;
+              if (o.position.y <= floor) landBale(o, base, floor);
+            }
+          } else if (u.on) { o.position.set(u.on.position.x, u.on.position.y + BALE_H, u.on.position.z); }
+        });
 
         // tracks + smoke
         odo += Math.abs(speed) * dt;
@@ -355,7 +431,7 @@ Games.register({
       draw(ctx) {
         S.render();
         ctx.clearRect(0, 0, api.w, api.h);
-        if (CONFIG.showGuides) Kit3D.drawGuide(ctx, api, { 0: '🦘', 1: '📯', 2: '💡', 3: '🏗️', 4: '⬅️', 5: '➡️', 6: '⏪', 7: '⏩', stick: '🚜' }, 0.8);
+        if (CONFIG.showGuides) Kit3D.drawGuide(ctx, api, { 0: '🦘', 1: '📯', 2: '💡', 3: carry ? '⬇️' : '🏗️', 4: '⬅️', 5: '➡️', 6: '⏪', 7: '⏩', stick: '🚜' }, 0.8);
       },
       destroy() { engine.stop(); S.destroy(); },
     };
